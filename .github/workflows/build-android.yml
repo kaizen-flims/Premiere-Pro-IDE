@@ -1,7 +1,16 @@
 name: Build Podium Air Android
 
 on:
-  workflow_dispatch:
+  workflow_call:
+    secrets:
+      PODIUM_RELEASE_KEYSTORE_BASE64:
+        required: true
+      PODIUM_RELEASE_STORE_PASSWORD:
+        required: true
+      PODIUM_RELEASE_KEY_ALIAS:
+        required: true
+      PODIUM_RELEASE_KEY_PASSWORD:
+        required: true
 
 permissions:
   contents: read
@@ -14,6 +23,9 @@ jobs:
     steps:
       - name: Checkout build-station configuration
         uses: actions/checkout@v4
+        with:
+          repository: kaizen-flims/Premiere-Pro-IDE
+          ref: main
 
       - name: Checkout pinned BitChord Android source
         uses: actions/checkout@v4
