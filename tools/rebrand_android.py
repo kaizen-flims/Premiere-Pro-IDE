@@ -88,7 +88,7 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
         data = re.sub(
             r'(?<=>)([^<]*[Bb]it[Cc]hord[^<]*)(?=<)',
             lambda m: re.sub(
-                r'(?i)(?<![A-Za-z0-9._/-])BitChord(?![A-Za-z0-9._/-])',
+                r'(?i)(?<![A-Za-z0-9._/:-])BitChord(?![A-Za-z0-9._/:-])',
                 "Podium Air",
                 m.group(1),
             ),
