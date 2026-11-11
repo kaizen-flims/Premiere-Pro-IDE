@@ -116,7 +116,7 @@ shared_drawables = project / "sharedUi/src/commonMain/composeResources/drawable"
 shared_drawables.mkdir(parents=True, exist_ok=True)
 shutil.copy2(white_svg_path, shared_drawables / "podium_air_logo.svg")
 
-vector_xml = f\'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
+vector_xml = f'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="32dp"
     android:height="32dp"
     android:viewportWidth="1024"
