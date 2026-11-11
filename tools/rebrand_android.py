@@ -75,11 +75,11 @@ replacements = {
     "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt": [
         ("https://api.github.com/repos/kushagrasinghx/BitChord/releases/latest",
          "https://api.github.com/repos/kaizen-flims/Podium-Air/releases/latest"),
-        ('"bitchord-\${info.version}.apk"', '"podium-air-\${info.version}.apk"'),
+        ('"bitchord-${info.version}.apk"', '"podium-air-${info.version}.apk"'),
     ],
     "app/src/main/java/com/music/bitchord/BitChordApplication.kt": [
-        ("BitChord/\${BuildConfig.VERSION_NAME} (Android; +https://github.com/kushagrasinghx/BitChord)",
-         "Podium Air/\${BuildConfig.VERSION_NAME} (Android; +https://github.com/kaizen-flims/Podium-Air)"),
+        ("BitChord/${BuildConfig.VERSION_NAME} (Android; +https://github.com/kushagrasinghx/BitChord)",
+         "Podium Air/${BuildConfig.VERSION_NAME} (Android; +https://github.com/kaizen-flims/Podium-Air)"),
     ],
     "app/src/main/java/com/music/bitchord/data/discord/DiscordRPC.kt": [
         ("https://github.com/kushagrasinghx/BitChord", "https://github.com/kaizen-flims/Podium-Air"),
