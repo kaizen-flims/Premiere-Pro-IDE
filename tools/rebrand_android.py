@@ -78,13 +78,13 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
         # the entire strings.xml file: it also contains app_name, which must
         # become Podium Air for Android's installer and launcher labels.
         storage_pattern = re.compile(
-            r'(<string\\s+name="saved_to_bitchord_folder"[^>]*>)(.*?)(</string>)',
+            r'(<string\s+name="saved_to_bitchord_folder"[^>]*>)(.*?)(</string>)',
             re.DOTALL,
         )
         storage_match = storage_pattern.search(data)
         storage_text = storage_match.group(2) if storage_match else None
         if storage_match:
-            data = storage_pattern.sub(r"\\1__PODIUM_STORAGE_LABEL_PRESERVED__\\3", data, count=1)
+            data = storage_pattern.sub(r"\1__PODIUM_STORAGE_LABEL_PRESERVED__\3", data, count=1)
         data = re.sub(
             r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
             lambda m: m.group(1).replace("BitChord", "Podium Air"),
@@ -145,7 +145,7 @@ data = data.replace('@mipmap/ic_launcher', '@drawable/legacy_icon')
 # icon attribute. Point that alias at the same Legacy icon as the application
 # itself, otherwise the launcher keeps showing BitChord's old adaptive icon.
 alias_pattern = re.compile(
-    r'(<activity-alias\\s+android:name="\\.LauncherDefault".*?</activity-alias>)',
+    r'(<activity-alias\s+android:name="\.LauncherDefault".*?</activity-alias>)',
     re.DOTALL,
 )
 data, alias_count = alias_pattern.subn(
