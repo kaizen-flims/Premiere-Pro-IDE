@@ -182,6 +182,12 @@ replacements = {
         ("private const val LOGO_W = 66f", "private const val LOGO_W = 44f"),
         ("private const val LOGO_H = 44f", "private const val LOGO_H = 44f"),
     ],
+    "app/src/main/java/com/music/bitchord/wear/WatchInstaller.kt": [
+        ('private const val TAG = "BitChordWear"', 'private const val TAG = "PodiumAirWear"'),
+        ('X500Name("CN=BitChord")', 'X500Name("CN=Podium Air")'),
+        ('override fun getDeviceName(): String = "BitChord"',
+         'override fun getDeviceName(): String = "Podium Air"'),
+    ],
 }
 for rel, pairs in replacements.items():
     path = project / rel
@@ -295,5 +301,8 @@ assert 'applicationId = "com.podium.air"' in app_gradle.read_text(encoding="utf-
 assert 'extra["podiumVersionCode"] = 4' in root_gradle.read_text(encoding="utf-8")
 assert 'extra["podiumVersionName"] = "2.0.0"' in root_gradle.read_text(encoding="utf-8")
 assert (icon_dir / "legacy_icon.png").is_file()
+assert (shared_drawables / "podium_air_logo.svg").is_file()
+assert "Podium Air $version" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
+assert "Made with ❤️ by Prem" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
 assert "kaizen-flims/Podium-Air/releases/latest" in (project / "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt").read_text(encoding="utf-8")
 print("Podium Air Android branding applied and verified.")
