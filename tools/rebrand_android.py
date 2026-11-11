@@ -100,6 +100,40 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
             raise SystemExit(f"Invalid XML after branding in {xml}: {exc}")
         xml.write_text(data, encoding="utf-8")
 
+# Use the supplied white Podium Air SVG as the canonical in-app logo.
+white_svg_path = branding / "PodiumAir white.svg"
+white_svg = white_svg_path.read_text(encoding="utf-8")
+path_match = re.search(r'<path[^>]*\\bd="([^"]+)"', white_svg)
+if not path_match:
+    raise SystemExit("Could not read path data from the supplied white SVG.")
+path_data = path_match.group(1)
+
+shared_drawables = project / "sharedUi/src/commonMain/composeResources/drawable"
+shared_drawables.mkdir(parents=True, exist_ok=True)
+shutil.copy2(white_svg_path, shared_drawables / "podium_air_logo.svg")
+
+vector_xml = f\'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="{path_data}"/>
+</vector>
+\'''
+for rel in [
+    "app/src/main/res/drawable/ic_logo.xml",
+    "sharedUi/src/commonMain/composeResources/drawable/ic_logo.xml",
+]:
+    (project / rel).write_text(vector_xml, encoding="utf-8")
+
+for source in (project / "sharedUi/src").rglob("*.kt"):
+    source_data = source.read_text(encoding="utf-8")
+    updated = source_data.replace("Res.drawable.ic_logo", "Res.drawable.podium_air_logo")
+    if updated != source_data:
+        source.write_text(updated, encoding="utf-8")
+
 replacements = {
     "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt": [
         ("https://api.github.com/repos/kushagrasinghx/BitChord/releases/latest",
@@ -119,6 +153,15 @@ replacements = {
     ],
     "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt": [
         ("https://github.com/kushagrasinghx/BitChord", "https://github.com/kaizen-flims/Podium-Air"),
+        ('append("bitchord $version  ")', 'append("Podium Air $version  ")'),
+    ],
+    "app/src/main/java/com/music/bitchord/ui/replay/ReplayPoster.kt": [
+        ('canvas.drawText("BitChord", POSTER_W - MARGIN, 132f, brand)',
+         'canvas.drawText("Podium Air", POSTER_W - MARGIN, 132f, brand)'),
+        ('brand.measureText("BitChord")', 'brand.measureText("Podium Air")'),
+    ],
+    "app/src/main/java/com/music/bitchord/ui/replay/ReplayStories.kt": [
+        ('text = "BitChord"', 'text = "Podium Air"'),
     ],
 }
 for rel, pairs in replacements.items():
@@ -129,6 +172,41 @@ for rel, pairs in replacements.items():
             raise SystemExit(f"Expected branding target not found in {rel}: {old}")
         data = data.replace(old, new)
     path.write_text(data, encoding="utf-8")
+
+settings_sheet = project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt"
+data = settings_sheet.read_text(encoding="utf-8")
+footer_marker = 'append("\\n~YouTube Music & Listen Together Backend")'
+if footer_marker not in data:
+    raise SystemExit("Expected Settings footer backend credit not found.")
+data = data.replace(
+    footer_marker,
+    footer_marker + '\\n                append("\\nMade with ❤️ by Prem")',
+    1,
+)
+account_card_marker = """                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (!signedIn) {"""
+account_card_replacement = """                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Made with ❤️ by Prem",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (!signedIn) {"""
+if account_card_marker not in data:
+    raise SystemExit("Could not find AccountCard identity panel insertion point.")
+data = data.replace(account_card_marker, account_card_replacement, 1)
+settings_sheet.write_text(data, encoding="utf-8")
 
 legacy = branding / "legacy_icon.png"
 if not legacy.is_file():
