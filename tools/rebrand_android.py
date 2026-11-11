@@ -86,7 +86,7 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
         if storage_match:
             data = storage_pattern.sub(r"\1__PODIUM_STORAGE_LABEL_PRESERVED__\3", data, count=1)
         data = re.sub(
-            r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
+            r'(?<=>)([^<]*[Bb]it[Cc]hord[^<]*)(?=<)',
             lambda m: re.sub(
                 r'(?i)(?<![A-Za-z0-9._/-])BitChord(?![A-Za-z0-9._/-])',
                 "Podium Air",
@@ -132,11 +132,12 @@ for rel in [
 ]:
     (project / rel).write_text(vector_xml, encoding="utf-8")
 
-for source in (project / "sharedUi/src").rglob("*.kt"):
-    source_data = source.read_text(encoding="utf-8")
-    updated = source_data.replace("Res.drawable.ic_logo", "Res.drawable.podium_air_logo")
-    if updated != source_data:
-        source.write_text(updated, encoding="utf-8")
+for source_root in [project / "sharedUi/src", project / "app/src/main"]:
+    for source in source_root.rglob("*.kt"):
+        source_data = source.read_text(encoding="utf-8")
+        updated = source_data.replace("Res.drawable.ic_logo", "Res.drawable.podium_air_logo")
+        if updated != source_data:
+            source.write_text(updated, encoding="utf-8")
 
 replacements = {
     "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt": [
@@ -166,6 +167,20 @@ replacements = {
     ],
     "app/src/main/java/com/music/bitchord/ui/replay/ReplayStories.kt": [
         ('text = "BitChord"', 'text = "Podium Air"'),
+        ("Modifier.size(width = 26.dp, height = 17.dp)", "Modifier.size(17.dp)"),
+    ],
+    "app/src/main/java/com/music/bitchord/ui/onboarding/OnboardingScreen.kt": [
+        ("Modifier.size(width = 46.dp, height = 30.dp)", "Modifier.size(30.dp)"),
+    ],
+    "sharedUi/src/jvmSharedMain/kotlin/com/music/bitchord/ui/replay/ReplayCard.kt": [
+        ("Modifier.size(width = 34.dp, height = 22.dp)", "Modifier.size(22.dp)"),
+    ],
+    "sharedUi/src/jvmSharedMain/kotlin/com/music/bitchord/ui/screens/TopPicksShelf.kt": [
+        (".aspectRatio(730f / 484f)", ".aspectRatio(1f)"),
+    ],
+    "app/src/main/java/com/music/bitchord/ui/replay/ReplayPoster.kt": [
+        ("private const val LOGO_W = 66f", "private const val LOGO_W = 44f"),
+        ("private const val LOGO_H = 44f", "private const val LOGO_H = 44f"),
     ],
 }
 for rel, pairs in replacements.items():
