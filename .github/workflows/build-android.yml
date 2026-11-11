@@ -72,7 +72,11 @@ jobs:
 
       - name: Install Android build components
         run: |
-          sdkmanager "platforms;android-37" "cmake;3.22.1" "ndk;27.2.12479018"
+          # API 37 is published by Google's SDK repository as android-37.0.
+          sdkmanager --install "platforms;android-37.0" "cmake;3.22.1" "ndk;27.2.12479018"
+          test -d "$ANDROID_HOME/platforms/android-37.0" || { echo "::error::Android SDK Platform 37.0 was not installed."; exit 1; }
+          test -d "$ANDROID_HOME/cmake/3.22.1" || { echo "::error::CMake 3.22.1 was not installed."; exit 1; }
+          test -d "$ANDROID_HOME/ndk/27.2.12479018" || { echo "::error::NDK 27.2.12479018 was not installed."; exit 1; }
 
       - name: Prepare Android-only source tree
         run: |
@@ -99,6 +103,10 @@ jobs:
         working-directory: android
         run: |
           printf '%s' "$KEYSTORE_B64" | base64 --decode > podium-release.jks
+          test -s podium-release.jks || { echo "::error::Decoded signing keystore is empty."; exit 1; }
+          keytool -list -keystore podium-release.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
+          keytool -certreq -alias "$KEY_ALIAS" -keystore podium-release.jks -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" -file "$RUNNER_TEMP/podium-signing-check.csr" >/dev/null
+          rm -f "$RUNNER_TEMP/podium-signing-check.csr"
           {
             echo "storeFile=podium-release.jks"
             echo "storePassword=$STORE_PASSWORD"
@@ -118,6 +126,9 @@ jobs:
             find android/app/build/outputs/apk -type f -name '*.apk' -print || true
             exit 1
           fi
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -n "$APKSIGNER" || { echo "::error::Android apksigner tool was not found."; exit 1; }
+          "$APKSIGNER" verify --verbose "$APK"
           cp "$APK" Podium-Air-v2.0.0.apk
           ls -lh Podium-Air-v2.0.0.apk
 
