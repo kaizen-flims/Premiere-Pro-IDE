@@ -74,12 +74,24 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
         continue
     for xml in base.glob("values*/strings.xml"):
         data = xml.read_text(encoding="utf-8")
-        if 'name="saved_to_bitchord_folder"' not in data:
-            data = re.sub(
-                r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
-                lambda m: m.group(1).replace("BitChord", "Podium Air"),
-                data,
-            )
+        # Preserve the existing public storage-folder name only. Do not skip
+        # the entire strings.xml file: it also contains app_name, which must
+        # become Podium Air for Android's installer and launcher labels.
+        storage_pattern = re.compile(
+            r'(<string\\s+name="saved_to_bitchord_folder"[^>]*>)(.*?)(</string>)',
+            re.DOTALL,
+        )
+        storage_match = storage_pattern.search(data)
+        storage_text = storage_match.group(2) if storage_match else None
+        if storage_match:
+            data = storage_pattern.sub(r"\\1__PODIUM_STORAGE_LABEL_PRESERVED__\\3", data, count=1)
+        data = re.sub(
+            r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
+            lambda m: m.group(1).replace("BitChord", "Podium Air"),
+            data,
+        )
+        if storage_text is not None:
+            data = data.replace("__PODIUM_STORAGE_LABEL_PRESERVED__", storage_text, 1)
         # Validate the transformed resource immediately so malformed XML is
         # caught here with its exact file path, before Gradle resource tasks.
         try:
@@ -129,6 +141,19 @@ manifest = project / "app/src/main/AndroidManifest.xml"
 data = manifest.read_text(encoding="utf-8")
 data = data.replace('@mipmap/ic_launcher_round', '@drawable/legacy_icon')
 data = data.replace('@mipmap/ic_launcher', '@drawable/legacy_icon')
+# The home-screen launcher entry is an activity-alias and carries its own
+# icon attribute. Point that alias at the same Legacy icon as the application
+# itself, otherwise the launcher keeps showing BitChord's old adaptive icon.
+alias_pattern = re.compile(
+    r'(<activity-alias\\s+android:name="\\.LauncherDefault".*?</activity-alias>)',
+    re.DOTALL,
+)
+data, alias_count = alias_pattern.subn(
+    lambda m: m.group(1).replace('@mipmap/ic_launcher', '@drawable/legacy_icon'),
+    data,
+)
+if alias_count != 1:
+    raise SystemExit(f"Expected exactly one LauncherDefault alias, found {alias_count}")
 manifest.write_text(data, encoding="utf-8")
 
 app_icon = project / "app/src/main/java/com/music/bitchord/AppIcon.kt"
