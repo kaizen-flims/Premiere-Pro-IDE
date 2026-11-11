@@ -99,6 +99,9 @@ jobs:
           test -f android/native/third_party/signalsmith-stretch/signalsmith-stretch.h
           chmod +x android/gradlew
 
+      - name: Install image processing dependency
+        run: python3 -m pip install --disable-pip-version-check Pillow
+
       - name: Apply Podium Air identity
         run: python3 tools/rebrand_android.py android branding
 
