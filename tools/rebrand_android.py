@@ -125,7 +125,7 @@ vector_xml = f'''<vector xmlns:android="http://schemas.android.com/apk/res/andro
         android:fillColor="#FFFFFFFF"
         android:pathData="{path_data}"/>
 </vector>
-\'''
+'''
 for rel in [
     "app/src/main/res/drawable/ic_logo.xml",
     "sharedUi/src/commonMain/composeResources/drawable/ic_logo.xml",
