@@ -86,9 +86,17 @@ jobs:
           cp -a upstream/sharedUi android/
           cp -a upstream/gradle android/
           cp upstream/build.gradle.kts upstream/gradle.properties upstream/gradlew android/
-          mkdir -p android/wearos
+          mkdir -p android/wearos android/native
           cp -a upstream/wearos/protocol android/wearos/
+          # The phone's CMake targets compile these shared native sources.
+          # Exclude native/ffmpeg: the Android app consumes its packaged JNI libs.
+          cp -a upstream/native/analyzer android/native/
+          cp -a upstream/native/loopmix android/native/
+          cp -a upstream/native/third_party android/native/
           cp upstream/LICENSE android/LICENSE
+          test -f android/native/analyzer/audio_analysis.cpp
+          test -f android/native/loopmix/loop_mix_renderer.cpp
+          test -f android/native/third_party/signalsmith-stretch/signalsmith-stretch.h
           chmod +x android/gradlew
 
       - name: Apply Podium Air identity
