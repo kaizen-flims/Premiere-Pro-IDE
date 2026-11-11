@@ -248,7 +248,37 @@ if not legacy.is_file():
     raise SystemExit("Missing branding/legacy_icon.png. Upload the Legacy icon before running this workflow.")
 icon_dir = project / "app/src/main/res/drawable-nodpi"
 icon_dir.mkdir(parents=True, exist_ok=True)
-shutil.copy2(legacy, icon_dir / "legacy_icon.png")
+
+# The supplied launcher PNG can contain large transparent margins. Android
+# preserves those margins when it rasterizes a bitmap drawable as an app icon,
+# making the artwork look tiny on the home screen. Trim only transparent
+# pixels, then center the artwork on a square canvas with a small safety margin.
+try:
+    from PIL import Image
+except ImportError as exc:
+    raise SystemExit("Pillow is required to normalize the launcher icon.") from exc
+
+with Image.open(legacy) as source:
+    icon = source.convert("RGBA")
+    alpha = icon.getchannel("A")
+    bounds = alpha.getbbox()
+    if bounds is None:
+        raise SystemExit("Legacy icon is fully transparent.")
+    artwork = icon.crop(bounds)
+    side = max(artwork.width, artwork.height)
+    canvas_size = max(1024, side)
+    margin = round(canvas_size * 0.035)
+    available = canvas_size - margin * 2
+    scale = min(available / artwork.width, available / artwork.height)
+    resized = artwork.resize(
+        (max(1, round(artwork.width * scale)), max(1, round(artwork.height * scale))),
+        Image.Resampling.LANCZOS,
+    )
+    canvas = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
+    position = ((canvas_size - resized.width) // 2, (canvas_size - resized.height) // 2)
+    canvas.alpha_composite(resized, position)
+    canvas.save(icon_dir / "legacy_icon.png", optimize=True)
+print(f"Launcher icon normalized: trimmed transparent padding from {icon.size[0]}x{icon.size[1]} to {canvas_size}x{canvas_size}")
 
 manifest = project / "app/src/main/AndroidManifest.xml"
 data = manifest.read_text(encoding="utf-8")
