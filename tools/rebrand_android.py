@@ -65,7 +65,7 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
         out = []
         for line in lines:
             if 'name="saved_to_bitchord_folder"' not in line:
-                line = re.sub(r">(\\s*[^<]*?)BitChord",
+                line = re.sub(r">(\s*[^<]*?)BitChord",
                               lambda m: m.group(1) + "Podium Air",
                               line, flags=re.IGNORECASE)
             out.append(line)
@@ -125,7 +125,7 @@ app_icon.write_text(data.replace(old, new), encoding="utf-8")
 shutil.copy2(branding / "PodiumAir black.svg", project / "app/src/main/assets/Logo.svg")
 white_svg = (branding / "PodiumAir white.svg").read_text(encoding="utf-8")
 shutil.copy2(branding / "PodiumAir white.svg", project / "app/src/main/assets/LogoTransparent.svg")
-path_match = re.search(r'<path[^>]*\\bd="([^"]+)"', white_svg)
+path_match = re.search(r'<path[^>]*\bd="([^"]+)"', white_svg)
 if not path_match:
     raise SystemExit("Could not read path data from the supplied white SVG.")
 path_data = path_match.group(1)
