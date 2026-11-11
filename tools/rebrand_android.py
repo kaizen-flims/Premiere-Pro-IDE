@@ -56,8 +56,8 @@ for old, new in [
 # The updater asset prefix is a build-config string. Match the declaration
 # structurally so formatting/escaping changes upstream cannot break branding.
 data, prefix_count = re.subn(
-    r'(buildConfigField\(\s*"String"\s*,\s*"UPDATE_APK_PREFIX"\s*,\s*)"[^"]*"',
-    r'\1"Podium-Air-"',
+    r'(?m)^\s*buildConfigField\("String",\s*"UPDATE_APK_PREFIX",.*\)$',
+    lambda _: r'        buildConfigField("String", "UPDATE_APK_PREFIX", "\"Podium-Air-\"")',
     data,
 )
 if prefix_count != 1:
