@@ -124,7 +124,7 @@ jobs:
 
       - name: Build Podium Air 2.0.0
         working-directory: android
-        run: ./gradlew --no-daemon :app:assembleProdRelease
+        run: ./gradlew --no-daemon --stacktrace :app:assembleProdRelease
 
       - name: Name universal APK
         run: |
@@ -134,6 +134,10 @@ jobs:
             find android/app/build/outputs/apk -type f -name '*.apk' -print || true
             exit 1
           fi
+          AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          test -n "$AAPT" || { echo "::error::Android aapt tool was not found."; exit 1; }
+          BADGING="$("$AAPT" dump badging "$APK")"
+          printf '%s\\n' "$BADGING" | grep -F "package: name='com.podium.air' versionCode='4' versionName='2.0.0'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -n "$APKSIGNER" || { echo "::error::Android apksigner tool was not found."; exit 1; }
           "$APKSIGNER" verify --verbose "$APK"
