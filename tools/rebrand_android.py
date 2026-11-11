@@ -48,11 +48,20 @@ for old, new in [
     ('rootProject.extra["bitchordVersionName"]', 'rootProject.extra["podiumVersionName"]'),
     ('applicationId = "com.music.bitchord"', 'applicationId = "com.podium.air"'),
     ('applicationId = "com.dev.bitchord"', 'applicationId = "com.dev.podium.air"'),
-    ('"BitChord-"', '"Podium-Air-"'),
 ]:
     if old not in data:
         raise SystemExit(f"Expected app Gradle setting not found: {old}")
     data = data.replace(old, new)
+
+# The updater asset prefix is a build-config string. Match the declaration
+# structurally so formatting/escaping changes upstream cannot break branding.
+data, prefix_count = re.subn(
+    r'(buildConfigField\\(\\s*"String"\\s*,\\s*"UPDATE_APK_PREFIX"\\s*,\\s*)"[^"]*"',
+    r'\\1"Podium-Air-"',
+    data,
+)
+if prefix_count != 1:
+    raise SystemExit(f"Expected exactly one UPDATE_APK_PREFIX declaration, found {prefix_count}")
 app_gradle.write_text(data, encoding="utf-8")
 
 # Replace brand mentions only in XML text nodes. Keep Music/BitChord as the
