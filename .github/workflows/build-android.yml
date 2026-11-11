@@ -24,10 +24,10 @@ jobs:
 
       - name: Verify Legacy icon and signing credentials
         env:
-          KEYSTORE_B64: \${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: \${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
-          KEY_ALIAS: \${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
-          KEY_PASSWORD: \${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
+          KEYSTORE_B64: ${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
         run: |
           test -f branding/legacy_icon.png || { echo "::error::Upload the Legacy icon to branding/legacy_icon.png first."; exit 1; }
           test -n "$KEYSTORE_B64" || { echo "::error::Missing PODIUM_RELEASE_KEYSTORE_BASE64 Actions secret."; exit 1; }
@@ -78,10 +78,10 @@ jobs:
 
       - name: Configure existing Podium Air release signing
         env:
-          KEYSTORE_B64: \${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
-          STORE_PASSWORD: \${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
-          KEY_ALIAS: \${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
-          KEY_PASSWORD: \${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
+          KEYSTORE_B64: ${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
         working-directory: android
         run: |
           printf '%s' "$KEYSTORE_B64" | base64 --decode > podium-release.jks
