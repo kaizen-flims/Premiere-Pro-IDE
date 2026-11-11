@@ -1,0 +1,116 @@
+name: Build Podium Air Android
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build signed universal APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout build-station configuration
+        uses: actions/checkout@v4
+
+      - name: Checkout pinned BitChord Android source
+        uses: actions/checkout@v4
+        with:
+          repository: kushagrasinghx/BitChord
+          ref: v1.9.1
+          path: upstream
+
+      - name: Verify Legacy icon and signing credentials
+        env:
+          KEYSTORE_B64: \${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: \${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: \${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: \${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
+        run: |
+          test -f branding/legacy_icon.png || { echo "::error::Upload the Legacy icon to branding/legacy_icon.png first."; exit 1; }
+          test -n "$KEYSTORE_B64" || { echo "::error::Missing PODIUM_RELEASE_KEYSTORE_BASE64 Actions secret."; exit 1; }
+          test -n "$STORE_PASSWORD" || { echo "::error::Missing PODIUM_RELEASE_STORE_PASSWORD Actions secret."; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "::error::Missing PODIUM_RELEASE_KEY_ALIAS Actions secret."; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "::error::Missing PODIUM_RELEASE_KEY_PASSWORD Actions secret."; exit 1; }
+          python3 - <<'PY'
+          import struct
+          p = "branding/legacy_icon.png"
+          with open(p, "rb") as f:
+              header = f.read(24)
+          if header[:8] != b"\x89PNG\r\n\x1a\n":
+              raise SystemExit("Legacy icon must be a PNG file.")
+          width, height = struct.unpack(">II", header[16:24])
+          if width != height:
+              raise SystemExit(f"Legacy icon must be square, got {width}x{height}.")
+          print(f"Legacy icon verified: {width}x{height}")
+          PY
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: |
+          sdkmanager "platforms;android-37" "cmake;3.22.1" "ndk;27.2.12479018"
+
+      - name: Prepare Android-only source tree
+        run: |
+          mkdir -p android
+          cp -a upstream/app android/
+          cp -a upstream/shared android/
+          cp -a upstream/sharedUi android/
+          cp -a upstream/gradle android/
+          cp upstream/build.gradle.kts upstream/gradle.properties upstream/gradlew android/
+          mkdir -p android/wearos
+          cp -a upstream/wearos/protocol android/wearos/
+          cp upstream/LICENSE android/LICENSE
+          chmod +x android/gradlew
+
+      - name: Apply Podium Air identity
+        run: python3 tools/rebrand_android.py android branding
+
+      - name: Configure existing Podium Air release signing
+        env:
+          KEYSTORE_B64: \${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: \${{ secrets.PODIUM_RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: \${{ secrets.PODIUM_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: \${{ secrets.PODIUM_RELEASE_KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > podium-release.jks
+          {
+            echo "storeFile=podium-release.jks"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASSWORD"
+          } > keystore.properties
+
+      - name: Build Podium Air 2.0.0
+        working-directory: android
+        run: ./gradlew --no-daemon :app:assembleProdRelease
+
+      - name: Name universal APK
+        run: |
+          APK="$(find android/app/build/outputs/apk/prod/release -maxdepth 1 -type f -name '*universal*.apk' | head -n 1)"
+          if [ -z "$APK" ]; then
+            echo "::error::Universal APK not found in Gradle outputs."
+            find android/app/build/outputs/apk -type f -name '*.apk' -print || true
+            exit 1
+          fi
+          cp "$APK" Podium-Air-v2.0.0.apk
+          ls -lh Podium-Air-v2.0.0.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Podium-Air-v2.0.0
+          path: Podium-Air-v2.0.0.apk
+          if-no-files-found: error
+          retention-days: 14
