@@ -64,21 +64,29 @@ if prefix_count != 1:
     raise SystemExit(f"Expected exactly one UPDATE_APK_PREFIX declaration, found {prefix_count}")
 app_gradle.write_text(data, encoding="utf-8")
 
-# Replace brand mentions only in XML text nodes. Keep Music/BitChord as the
-# existing public storage folder so local files and downloads remain in place.
+# Replace brand mentions in XML text nodes only. Avoid rewriting markup,
+# attributes, or whitespace around tags. Keep Music/BitChord as the existing
+# public storage folder so local files and downloads remain in place.
+import xml.etree.ElementTree as ET
+
 for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/composeResources"]:
     if not base.exists():
         continue
     for xml in base.glob("values*/strings.xml"):
-        lines = xml.read_text(encoding="utf-8").splitlines(keepends=True)
-        out = []
-        for line in lines:
-            if 'name="saved_to_bitchord_folder"' not in line:
-                line = re.sub(r">(\s*[^<]*?)BitChord",
-                              lambda m: m.group(1) + "Podium Air",
-                              line, flags=re.IGNORECASE)
-            out.append(line)
-        xml.write_text("".join(out), encoding="utf-8")
+        data = xml.read_text(encoding="utf-8")
+        if 'name="saved_to_bitchord_folder"' not in data:
+            data = re.sub(
+                r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
+                lambda m: m.group(1).replace("BitChord", "Podium Air"),
+                data,
+            )
+        # Validate the transformed resource immediately so malformed XML is
+        # caught here with its exact file path, before Gradle resource tasks.
+        try:
+            ET.fromstring(data)
+        except ET.ParseError as exc:
+            raise SystemExit(f"Invalid XML after branding in {xml}: {exc}")
+        xml.write_text(data, encoding="utf-8")
 
 replacements = {
     "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt": [
