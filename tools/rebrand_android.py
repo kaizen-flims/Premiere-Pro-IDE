@@ -87,7 +87,11 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
             data = storage_pattern.sub(r"\1__PODIUM_STORAGE_LABEL_PRESERVED__\3", data, count=1)
         data = re.sub(
             r'(?<=>)([^<]*BitChord[^<]*)(?=<)',
-            lambda m: m.group(1).replace("BitChord", "Podium Air"),
+            lambda m: re.sub(
+                r'(?i)(?<![A-Za-z0-9._/-])BitChord(?![A-Za-z0-9._/-])',
+                "Podium Air",
+                m.group(1),
+            ),
             data,
         )
         if storage_text is not None:
@@ -103,7 +107,7 @@ for base in [project / "app/src/main/res", project / "sharedUi/src/commonMain/co
 # Use the supplied white Podium Air SVG as the canonical in-app logo.
 white_svg_path = branding / "PodiumAir white.svg"
 white_svg = white_svg_path.read_text(encoding="utf-8")
-path_match = re.search(r'<path[^>]*\\bd="([^"]+)"', white_svg)
+path_match = re.search(r'<path[^>]*\bd="([^"]+)"', white_svg)
 if not path_match:
     raise SystemExit("Could not read path data from the supplied white SVG.")
 path_data = path_match.group(1)
@@ -180,16 +184,26 @@ if footer_marker not in data:
     raise SystemExit("Expected Settings footer backend credit not found.")
 data = data.replace(
     footer_marker,
-    footer_marker + '\\n                append("\\nMade with ❤️ by Prem")',
+    footer_marker + '\n                append("\\nMade with ❤️ by Prem")',
     1,
 )
-account_card_marker = """                color = MaterialTheme.colorScheme.onSurfaceVariant,
+account_card_marker = """                text = account?.email?.takeIf { it.isNotBlank() }
+                    ?: stringResource(
+                        if (signedIn) R.string.youtube_music_account else R.string.tap_to_sign_in_google,
+                    ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         if (!signedIn) {"""
-account_card_replacement = """                color = MaterialTheme.colorScheme.onSurfaceVariant,
+account_card_replacement = """                text = account?.email?.takeIf { it.isNotBlank() }
+                    ?: stringResource(
+                        if (signedIn) R.string.youtube_music_account else R.string.tap_to_sign_in_google,
+                    ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
