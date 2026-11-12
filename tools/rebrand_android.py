@@ -200,6 +200,32 @@ for rel, pairs in replacements.items():
 
 settings_sheet = project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt"
 data = settings_sheet.read_text(encoding="utf-8")
+
+# Keep the settings footer focused on the project: remove upstream Developer
+# and Discord links, while retaining GitHub and the Podium Air website.
+developer_credit = """                append("  ")
+                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx", linkStyles)) {
+                    append("Developer")
+                }
+"""
+discord_credit = """                append("  ")
+                withLink(LinkAnnotation.Url("https://discord.gg/pDdKfrdHY6", linkStyles)) {
+                    append("Discord")
+                }
+"""
+for credit in (developer_credit, discord_credit):
+    if credit not in data:
+        raise SystemExit("Could not locate the expected Developer/Discord settings credit link.")
+    data = data.replace(credit, "", 1)
+
+old_website = 'LinkAnnotation.Url("https://bitchord.kushagrasingh.in/", linkStyles)'
+if old_website not in data:
+    raise SystemExit("Could not locate the expected settings Website link.")
+data = data.replace(
+    old_website,
+    'LinkAnnotation.Url("https://podiumair.pages.dev", linkStyles)',
+    1,
+)
 data = data.replace("import com.music.bitchord.AppIcon\n", "")
 # Remove the complete App Icons row by its stable neighboring section boundary.
 # The row's internal layout changes frequently, so don't regex-match its UI tree.
