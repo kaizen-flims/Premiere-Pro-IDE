@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/main.tsx --bundle --minify --format=iife --target=es2020 --legal-comments=inline --define:process.env.NODE_ENV='"production"' --outfile=../android/app/src/main/assets/boot/boot.js"
+    "build": "NODE_ENV=production esbuild src/main.tsx --bundle --minify --format=iife --target=es2020 --legal-comments=inline '--define:process.env.NODE_ENV="production"' --outfile=../android/app/src/main/assets/boot/boot.js"
   },
   "dependencies": {
     "react": "^19.1.0",
