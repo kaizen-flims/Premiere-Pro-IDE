@@ -192,14 +192,13 @@ for rel, pairs in replacements.items():
 settings_sheet = project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt"
 data = settings_sheet.read_text(encoding="utf-8")
 data = data.replace("import com.music.bitchord.AppIcon\\n", "")
-app_icon_section = re.compile(
-    r'(?ms)^            val appIconTitle = stringResource\\(R\\.string\\.app_icon\\)\\n'
-    r'            row\\(appIconTitle,.*?^            \\}\\n'
-    r'(?=        \\}\\n\\n        if \\(shows\\(SettingsCategory\\.LANGUAGE\\)\\)\\))'
-)
-data, app_icon_section_count = app_icon_section.subn("", data, count=1)
-if app_icon_section_count != 1:
-    raise SystemExit("Could not remove the Miscellaneous App Icons section.")
+# Remove the complete App Icons row by its stable neighboring section boundary.
+# The row's internal layout changes frequently, so don't regex-match its UI tree.
+app_icon_start = data.find("            val appIconTitle = stringResource(R.string.app_icon)")
+language_section = data.find("\\n        }\\n\\n        if (shows(SettingsCategory.LANGUAGE))", app_icon_start)
+if app_icon_start < 0 or language_section < 0:
+    raise SystemExit("Could not locate App Icons row boundaries in Miscellaneous settings.")
+data = data[:app_icon_start] + data[language_section:]
 footer_marker = 'append("\\n~YouTube Music & Listen Together Backend")'
 if footer_marker not in data:
     raise SystemExit("Expected Settings footer backend credit not found.")
