@@ -105,6 +105,25 @@ jobs:
       - name: Apply Podium Air identity
         run: python3 tools/rebrand_android.py android branding
 
+      - name: Set up Node.js for the ReactDrops startup bundle
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install and bundle ReactDrops Liquid Glass Logo
+        working-directory: boot-web
+        run: |
+          npm install --no-audit --no-fund
+          npx --yes shadcn@latest add https://reactdrops.dev/r/liquid-glass-logo.json --yes
+          npm install --no-audit --no-fund
+          mkdir -p ../android/app/src/main/assets/boot
+          cp "../branding/PodiumAir white.svg" "../android/app/src/main/assets/boot/podium-air-logo.svg"
+          npm run build
+          cp index.html ../android/app/src/main/assets/boot/index.html
+          test -s ../android/app/src/main/assets/boot/boot.js
+          test -s ../android/app/src/main/assets/boot/boot.css
+          test -s ../android/app/src/main/assets/boot/podium-air-logo.svg
+
       - name: Configure existing Podium Air release signing
         env:
           KEYSTORE_B64: ${{ secrets.PODIUM_RELEASE_KEYSTORE_BASE64 }}
