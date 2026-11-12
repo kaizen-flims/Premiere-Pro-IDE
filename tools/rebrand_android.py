@@ -114,8 +114,6 @@ path_data = path_match.group(1)
 
 shared_drawables = project / "sharedUi/src/commonMain/composeResources/drawable"
 shared_drawables.mkdir(parents=True, exist_ok=True)
-shutil.copy2(white_svg_path, shared_drawables / "podium_air_logo.svg")
-
 vector_xml = f'''<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="32dp"
     android:height="32dp"
@@ -131,13 +129,6 @@ for rel in [
     "sharedUi/src/commonMain/composeResources/drawable/ic_logo.xml",
 ]:
     (project / rel).write_text(vector_xml, encoding="utf-8")
-
-for source_root in [project / "sharedUi/src", project / "app/src/main"]:
-    for source in source_root.rglob("*.kt"):
-        source_data = source.read_text(encoding="utf-8")
-        updated = source_data.replace("Res.drawable.ic_logo", "Res.drawable.podium_air_logo")
-        if updated != source_data:
-            source.write_text(updated, encoding="utf-8")
 
 replacements = {
     "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt": [
@@ -200,6 +191,15 @@ for rel, pairs in replacements.items():
 
 settings_sheet = project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt"
 data = settings_sheet.read_text(encoding="utf-8")
+data = data.replace("import com.music.bitchord.AppIcon\\n", "")
+app_icon_section = re.compile(
+    r'(?ms)^            val appIconTitle = stringResource\\(R\\.string\\.app_icon\\)\\n'
+    r'            row\\(appIconTitle,.*?^            \\}\\n'
+    r'(?=        \\}\\n\\n        if \\(shows\\(SettingsCategory\\.LANGUAGE\\)\\)\\))'
+)
+data, app_icon_section_count = app_icon_section.subn("", data, count=1)
+if app_icon_section_count != 1:
+    raise SystemExit("Could not remove the Miscellaneous App Icons section.")
 footer_marker = 'append("\\n~YouTube Music & Listen Together Backend")'
 if footer_marker not in data:
     raise SystemExit("Expected Settings footer backend credit not found.")
@@ -297,15 +297,19 @@ data, alias_count = alias_pattern.subn(
 )
 if alias_count != 1:
     raise SystemExit(f"Expected exactly one LauncherDefault alias, found {alias_count}")
+data, removed_alias_count = re.subn(
+    r'\\s*<activity-alias\\s+android:name="\\.Launcher(?!Default)[^"]+".*?</activity-alias>',
+    "",
+    data,
+    flags=re.DOTALL,
+)
+if removed_alias_count < 1:
+    raise SystemExit("Expected to remove the obsolete launcher icon aliases.")
 manifest.write_text(data, encoding="utf-8")
 
 app_icon = project / "app/src/main/java/com/music/bitchord/AppIcon.kt"
-data = app_icon.read_text(encoding="utf-8")
-old = 'Default("LauncherDefault", R.mipmap.ic_launcher, R.string.app_icon_default)'
-new = 'Default("LauncherDefault", R.drawable.legacy_icon, R.string.app_icon_default, R.drawable.legacy_icon)'
-if old not in data:
-    raise SystemExit("Default launcher icon entry not found.")
-app_icon.write_text(data.replace(old, new), encoding="utf-8")
+if app_icon.exists():
+    app_icon.unlink()
 
 shutil.copy2(branding / "PodiumAir black.svg", project / "app/src/main/assets/Logo.svg")
 white_svg = (branding / "PodiumAir white.svg").read_text(encoding="utf-8")
@@ -331,8 +335,14 @@ assert 'applicationId = "com.podium.air"' in app_gradle.read_text(encoding="utf-
 assert 'extra["podiumVersionCode"] = 4' in root_gradle.read_text(encoding="utf-8")
 assert 'extra["podiumVersionName"] = "2.0.0"' in root_gradle.read_text(encoding="utf-8")
 assert (icon_dir / "legacy_icon.png").is_file()
-assert (shared_drawables / "podium_air_logo.svg").is_file()
+assert (shared_drawables / "ic_logo.xml").is_file()
 assert "Podium Air $version" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
 assert "Made with ❤️ by Prem" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
+settings_result = (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
+assert "appIconTitle" not in settings_result
+assert "com.music.bitchord.AppIcon" not in settings_result
+manifest_result = manifest.read_text(encoding="utf-8")
+assert 'android:name=".LauncherDefault"' in manifest_result
+assert not re.search(r'android:name="\\.Launcher(?!Default)', manifest_result)
 assert "kaizen-flims/Podium-Air/releases/latest" in (project / "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt").read_text(encoding="utf-8")
 print("Podium Air Android branding applied and verified.")
