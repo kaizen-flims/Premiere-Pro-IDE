@@ -123,7 +123,14 @@ jobs:
           test -s ../android/app/src/main/assets/boot/boot.js
           test -s ../android/app/src/main/assets/boot/boot.css
           test -s ../android/app/src/main/assets/boot/podium-air-logo.svg
-          grep -R -q --include="*.tsx" --include="*.ts" --include="*.css" "ReactDrops Component License 1.0" src/components
+          # Keep the full upstream license beside the installed source copy.
+          # Also ship it inside the APK as a third-party notice; no UI credit is required.
+          cp ../licenses/REACTDROPS-COMPONENT-LICENSE.txt src/components/REACTDROPS-LICENSE.md
+          cp ../licenses/REACTDROPS-COMPONENT-LICENSE.txt ../android/app/src/main/assets/boot/THIRD_PARTY-NOTICES-REACTDROPS.txt
+          grep -Fq "ReactDrops Component License 1.0" src/components/REACTDROPS-LICENSE.md
+          grep -Fq "You may distribute the Software as an integrated part of an End Product" src/components/REACTDROPS-LICENSE.md
+          grep -Fq "Retain this license and applicable copyright and third-party notices in source" src/components/REACTDROPS-LICENSE.md
+          test -s ../android/app/src/main/assets/boot/THIRD-PARTY-NOTICES-REACTDROPS.txt
 
       - name: Configure existing Podium Air release signing
         env:
