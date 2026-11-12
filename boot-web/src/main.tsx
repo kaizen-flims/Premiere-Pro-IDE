@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  LiquidGlassLogo,
-  liquidGlassLogoFinishTime,
-} from "./components/liquid-glass-logo";
+import { LiquidGlassLogo } from "./components/liquid-glass-logo";
+import { liquidGlassLogoFinishTime } from "./components/liquid-glass-logo-renderer";
 import "./index.css";
 
 declare global {
