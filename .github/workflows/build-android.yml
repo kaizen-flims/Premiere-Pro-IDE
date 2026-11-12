@@ -105,32 +105,12 @@ jobs:
       - name: Apply Podium Air identity
         run: python3 tools/rebrand_android.py android branding
 
-      - name: Set up Node.js for the ReactDrops startup bundle
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install and bundle ReactDrops Liquid Glass Logo
-        working-directory: boot-web
+      - name: Verify Podium Air SVG branding assets
         run: |
-          npm install --no-audit --no-fund
-          npx --yes shadcn@latest add https://reactdrops.dev/r/liquid-glass-logo.json --yes
-          npm install --no-audit --no-fund
-          mkdir -p ../android/app/src/main/assets/boot
-          cp "../branding/PodiumAir white.svg" "../android/app/src/main/assets/boot/podium-air-logo.svg"
-          npm run build
-          cp index.html ../android/app/src/main/assets/boot/index.html
-          test -s ../android/app/src/main/assets/boot/boot.js
-          test -s ../android/app/src/main/assets/boot/boot.css
-          test -s ../android/app/src/main/assets/boot/podium-air-logo.svg
-          # Keep the full upstream license beside the installed source copy.
-          # Also ship it inside the APK as a third-party notice; no UI credit is required.
-          cp ../licenses/REACTDROPS-COMPONENT-LICENSE.txt src/components/REACTDROPS-LICENSE.md
-          cp ../licenses/REACTDROPS-COMPONENT-LICENSE.txt ../android/app/src/main/assets/boot/THIRD_PARTY-NOTICES-REACTDROPS.txt
-          grep -Fq "ReactDrops Component License 1.0" src/components/REACTDROPS-LICENSE.md
-          grep -Fq "You may distribute the Software as an integrated part of an End Product" src/components/REACTDROPS-LICENSE.md
-          grep -Fq "Retain this license and applicable copyright and third-party notices in source" src/components/REACTDROPS-LICENSE.md
-          test -s ../android/app/src/main/assets/boot/THIRD_PARTY-NOTICES-REACTDROPS.txt
+          test -s "branding/PodiumAir white.svg"
+          test -s "branding/PodiumAir black.svg"
+          grep -q '<svg' "branding/PodiumAir white.svg"
+          grep -q '<svg' "branding/PodiumAir black.svg"
 
       - name: Configure existing Podium Air release signing
         env:
