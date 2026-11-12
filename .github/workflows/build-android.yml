@@ -130,7 +130,7 @@ jobs:
           grep -Fq "ReactDrops Component License 1.0" src/components/REACTDROPS-LICENSE.md
           grep -Fq "You may distribute the Software as an integrated part of an End Product" src/components/REACTDROPS-LICENSE.md
           grep -Fq "Retain this license and applicable copyright and third-party notices in source" src/components/REACTDROPS-LICENSE.md
-          test -s ../android/app/src/main/assets/boot/THIRD-PARTY-NOTICES-REACTDROPS.txt
+          test -s ../android/app/src/main/assets/boot/THIRD_PARTY-NOTICES-REACTDROPS.txt
 
       - name: Configure existing Podium Air release signing
         env:
