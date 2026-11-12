@@ -297,7 +297,7 @@ data, alias_count = alias_pattern.subn(
 if alias_count != 1:
     raise SystemExit(f"Expected exactly one LauncherDefault alias, found {alias_count}")
 data, removed_alias_count = re.subn(
-    r'\\s*<activity-alias\\s+android:name="\\.Launcher(?!Default)[^"]+".*?</activity-alias>',
+    r'\s*<activity-alias\s+android:name="\.Launcher(?!Default)[^"]+".*?</activity-alias>',
     "",
     data,
     flags=re.DOTALL,
