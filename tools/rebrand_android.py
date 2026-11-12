@@ -151,6 +151,9 @@ replacements = {
         ("https://github.com/kushagrasinghx/BitChord", "https://github.com/kaizen-flims/Podium-Air"),
         ('append("bitchord $version  ")', 'append("Podium Air $version  ")'),
     ],
+    "app/src/main/java/com/music/bitchord/ui/player/LyricsShareCard.kt": [
+        ('private const val BRAND = "BitChord"', 'private const val BRAND = "Podium Air"'),
+    ],
     "app/src/main/java/com/music/bitchord/ui/replay/ReplayPoster.kt": [
         ('canvas.drawText("BitChord", POSTER_W - MARGIN, 132f, brand)',
          'canvas.drawText("Podium Air", POSTER_W - MARGIN, 132f, brand)'),
@@ -371,6 +374,9 @@ assert 'extra["podiumVersionName"] = "2.0.0"' in root_gradle.read_text(encoding=
 assert (icon_dir / "legacy_icon.png").is_file()
 assert (shared_drawables / "ic_logo.xml").is_file()
 assert "Podium Air $version" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
+lyrics_card_result = (project / "app/src/main/java/com/music/bitchord/ui/player/LyricsShareCard.kt").read_text(encoding="utf-8")
+assert 'private const val BRAND = "Podium Air"' in lyrics_card_result
+assert 'private const val BRAND = "BitChord"' not in lyrics_card_result
 assert "Made with ❤️ by Prem" in (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
 settings_result = (project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt").read_text(encoding="utf-8")
 assert "appIconTitle" not in settings_result
