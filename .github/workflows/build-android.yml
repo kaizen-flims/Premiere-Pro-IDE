@@ -123,6 +123,7 @@ jobs:
           test -s ../android/app/src/main/assets/boot/boot.js
           test -s ../android/app/src/main/assets/boot/boot.css
           test -s ../android/app/src/main/assets/boot/podium-air-logo.svg
+          grep -q "ReactDrops Component License 1.0" ../android/app/src/main/assets/boot/boot.js
 
       - name: Configure existing Podium Air release signing
         env:
