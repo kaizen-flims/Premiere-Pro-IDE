@@ -172,7 +172,7 @@ replacements = {
         (".height(11.dp)", ".height(13.dp)"),
     ],
     "sharedUi/src/jvmSharedMain/kotlin/com/music/bitchord/ui/screens/HomeScreen.kt": [
-        ("private const val LOGO_TO_FONT = 0.9f", "private const val LOGO_TO_FONT = 1.2f"),
+        ("private const val LOGO_TO_FONT = 0.9f", "private const val LOGO_TO_FONT = 1.5f"),
     ],
     "app/src/main/java/com/music/bitchord/ui/replay/ReplayPoster.kt": [
         ("private const val LOGO_W = 66f", "private const val LOGO_W = 50f"),
@@ -195,104 +195,9 @@ for rel, pairs in replacements.items():
     path.write_text(data, encoding="utf-8")
 
 
-# Add the native WebView host for the locally bundled ReactDrops startup animation.
-main_activity = project / "app/src/main/java/com/music/bitchord/MainActivity.kt"
-data = main_activity.read_text(encoding="utf-8")
-for old, new in [
-    ("import android.Manifest\n", "import android.Manifest\nimport android.animation.ValueAnimator\n"),
-    ("import android.os.Bundle\n", "import android.os.Bundle\nimport android.os.Handler\nimport android.os.Looper\n"),
-    ("import android.view.View\n", "import android.view.View\nimport android.webkit.JavascriptInterface\nimport android.webkit.WebView\n"),
-    ("import androidx.compose.ui.res.stringResource\n", "import androidx.compose.ui.res.stringResource\nimport androidx.compose.ui.viewinterop.AndroidView\n"),
-]:
-    if old not in data:
-        raise SystemExit(f"Expected MainActivity import anchor not found: {old.strip()}")
-    data = data.replace(old, new, 1)
+# No startup animation is installed. The standalone ReactDrops animation remains
+# outside the Android app and can be used in promotional material.
 
-old_root = """                BoxWithConstraints(Modifier.fillMaxSize()) {
-                    BitChordApp(
-                        darkTheme = darkTheme,
-                        windowWidth = maxWidth,
-                        windowHeight = maxHeight,
-                        appBackdrop = appBackdrop,
-                    )
-                }
-"""
-new_root = """                var showPodiumBoot by remember { mutableStateOf(true) }
-                Box(Modifier.fillMaxSize()) {
-                    BoxWithConstraints(Modifier.fillMaxSize()) {
-                        BitChordApp(
-                            darkTheme = darkTheme,
-                            windowWidth = maxWidth,
-                            windowHeight = maxHeight,
-                            appBackdrop = appBackdrop,
-                        )
-                    }
-                    if (showPodiumBoot) {
-                        Box(Modifier.fillMaxSize().background(Color.Black)) {
-                            PodiumAirBootSplash(onFinished = { showPodiumBoot = false })
-                        }
-                    }
-                }
-"""
-if old_root not in data:
-    raise SystemExit("Could not find the MainActivity root content insertion point.")
-data = data.replace(old_root, new_root, 1)
-
-boot_host = """
-private class PodiumAirBootBridge(private val onFinish: () -> Unit) {
-    @JavascriptInterface
-    fun finish() {
-        Handler(Looper.getMainLooper()).post { onFinish() }
-    }
-}
-
-/**
- * The animation is bundled in app assets and runs locally in WebView, so the
- * first launch works offline. ReactDrops owns the glass rendering and its
- * reduced-motion and image-fallback behaviour; this host only dismisses it.
- */
-@Composable
-private fun PodiumAirBootSplash(onFinished: () -> Unit) {
-    val finishState = rememberUpdatedState(onFinished)
-    // A watchdog prevents a broken WebView or unavailable GPU from trapping
-    // the listener on the startup layer.
-    LaunchedEffect(Unit) {
-        delay(7_000)
-        finishState.value()
-    }
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { context ->
-            WebView(context).apply {
-                setBackgroundColor(android.graphics.Color.BLACK)
-                isVerticalScrollBarEnabled = false
-                isHorizontalScrollBarEnabled = false
-                overScrollMode = View.OVER_SCROLL_NEVER
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = false
-                settings.allowFileAccess = true
-                settings.allowContentAccess = false
-                settings.javaScriptCanOpenWindowsAutomatically = false
-                addJavascriptInterface(
-                    PodiumAirBootBridge { finishState.value() },
-                    "PodiumAirBoot",
-                )
-                val reducedMotion = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-                    !ValueAnimator.areAnimatorsEnabled()
-                val reducedMotionParam = if (reducedMotion) "1" else "0"
-                loadUrl("file:///android_asset/boot/index.html?reducedMotion=$reducedMotionParam")
-            }
-        },
-        update = {},
-        onRelease = { webView ->
-            webView.stopLoading()
-            webView.removeJavascriptInterface("PodiumAirBoot")
-            webView.destroy()
-        },
-    )
-}
-
-"""
 settings_sheet = project / "app/src/main/java/com/music/bitchord/ui/screens/SettingsSheet.kt"
 data = settings_sheet.read_text(encoding="utf-8")
 data = data.replace("import com.music.bitchord.AppIcon\n", "")
