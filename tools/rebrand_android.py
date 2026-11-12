@@ -342,6 +342,6 @@ assert "appIconTitle" not in settings_result
 assert "com.music.bitchord.AppIcon" not in settings_result
 manifest_result = manifest.read_text(encoding="utf-8")
 assert 'android:name=".LauncherDefault"' in manifest_result
-assert not re.search(r'android:name="\\.Launcher(?!Default)', manifest_result)
+assert not re.search(r'android:name="\.Launcher(?!Default)', manifest_result)
 assert "kaizen-flims/Podium-Air/releases/latest" in (project / "app/src/main/java/com/music/bitchord/data/AppUpdateChecker.kt").read_text(encoding="utf-8")
 print("Podium Air Android branding applied and verified.")
