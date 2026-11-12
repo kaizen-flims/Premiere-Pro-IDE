@@ -277,9 +277,8 @@ private fun PodiumAirBootSplash(onFinished: () -> Unit) {
                 )
                 val reducedMotion = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     !ValueAnimator.areAnimatorsEnabled()
-                loadUrl(
-                    "file:///android_asset/boot/index.html?reducedMotion=\${if (reducedMotion) 1 else 0}",
-                )
+                val reducedMotionParam = if (reducedMotion) "1" else "0"
+                loadUrl("file:///android_asset/boot/index.html?reducedMotion=$reducedMotionParam")
             }
         },
         update = {},
