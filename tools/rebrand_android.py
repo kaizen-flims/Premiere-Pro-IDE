@@ -218,7 +218,7 @@ old_root = """                BoxWithConstraints(Modifier.fillMaxSize()) {
                 }
 """
 new_root = """                var showPodiumBoot by remember { mutableStateOf(true) }
-                Box(Modifier.fillMaxSize().background(Color.Black)) {
+                Box(Modifier.fillMaxSize()) {
                     BoxWithConstraints(Modifier.fillMaxSize()) {
                         BitChordApp(
                             darkTheme = darkTheme,
@@ -228,7 +228,9 @@ new_root = """                var showPodiumBoot by remember { mutableStateOf(tr
                         )
                     }
                     if (showPodiumBoot) {
-                        PodiumAirBootSplash(onFinished = { showPodiumBoot = false })
+                        Box(Modifier.fillMaxSize().background(Color.Black)) {
+                            PodiumAirBootSplash(onFinished = { showPodiumBoot = false })
+                        }
                     }
                 }
 """
