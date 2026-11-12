@@ -199,12 +199,12 @@ language_section = data.find("\n        }\n\n        if (shows(SettingsCategory.
 if app_icon_start < 0 or language_section < 0:
     raise SystemExit("Could not locate App Icons row boundaries in Miscellaneous settings.")
 data = data[:app_icon_start] + data[language_section:]
-footer_marker = 'append("\n~YouTube Music & Listen Together Backend")'
+footer_marker = 'append("\\n~YouTube Music & Listen Together Backend")'
 if footer_marker not in data:
     raise SystemExit("Expected Settings footer backend credit not found.")
 data = data.replace(
     footer_marker,
-    footer_marker + '\n                append("\nMade with ❤️ by Prem")',
+    footer_marker + '\n                append("\\nMade with ❤️ by Prem")',
     1,
 )
 account_card_marker = """                text = account?.email?.takeIf { it.isNotBlank() }
